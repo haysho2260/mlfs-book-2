@@ -24,7 +24,7 @@ LONGITUDE := 15.5865 14.8091 14.9737 14.8094 14.8198
 # NUM_ITEMS := $(words $(CSV_PATH))
 NUM_ITEMS := 5
 
-include .env
+-include .env
 export $(shell sed 's/=.*//' .env)
 	
 check-venv:
