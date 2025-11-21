@@ -23,6 +23,7 @@ LONGITUDE := 15.5865 14.8091 14.9737 14.8094 14.8198
 # Compute list length (all lists assumed equal length)
 # NUM_ITEMS := $(words $(CSV_PATH))
 NUM_ITEMS := 5
+DAYS_AGO := 7
 
 -include .env
 export $(shell sed 's/=.*//' .env)
@@ -88,35 +89,52 @@ aq-llm:
 
 aq-all: aq-features aq-train aq-inference
 
+aq-multi-features:
+	ipython notebooks/airquality/1_air_quality_feature_backfill.ipynb \
+		"$(CSV)" "$(URL)" "$(COUNTRY)" "$(CITY)" "$(STREET)" "$(LAT)" "$(LON)" "$(DAYS_AGO)"
+
+aq-multi-train:
+	ipython notebooks/airquality/3_air_quality_training_pipeline.ipynb \
+		"$(CSV)" "$(URL)" "$(COUNTRY)" "$(CITY)" "$(STREET)" "$(LAT)" "$(LON)" "$(DAYS_AGO)"
+
+aq-multi-inference:
+	ipython notebooks/airquality/2_air_quality_feature_pipeline.ipynb \
+		"$(CSV)" "$(URL)" "$(COUNTRY)" "$(CITY)" "$(STREET)" "$(LAT)" "$(LON)" "$(DAYS_AGO)"; \
+	ipython notebooks/airquality/4_air_quality_batch_inference.ipynb \
+		"$(CSV)" "$(URL)" "$(COUNTRY)" "$(CITY)" "$(STREET)" "$(LAT)" "$(LON)" "$(DAYS_AGO)"
+
+
 aq-multi: $(addprefix multi-, $(shell seq 1 $(NUM_ITEMS)))
 
 multi-%:
-	@idx=$*; \
-	csv=$(word $*, $(CSV_PATH)); \
-	url=$(word $*, $(AQICN_URLS)); \
-	country=$(word $*, $(AQICN_COUNTRY)); \
-	city=$(word $*, $(AQICN_CITY)); \
-	street=$(word $*, $(AQICN_STREET)); \
-	latitude=$(word $*, $(LATITUDE)); \
-	longitude=$(word $*, $(LONGITUDE)); \
-	make aq-features CSV="$$csv" URL="$$url" COUNTRY="$$country" CITY="$$city" STREET="$$street" LAT="$$latitude" LON="$$longitude"; \
-	make aq-train; \
-	make aq-inference; \
-	make aq-inference-ensemble
+	@csv="$(word $*, $(CSV_PATH))"; \
+	url="$(word $*, $(AQICN_URLS))"; \
+	country="$(word $*, $(AQICN_COUNTRY))"; \
+	city="$(word $*, $(AQICN_CITY))"; \
+	street="$(word $*, $(AQICN_STREET))"; \
+	latitude="$(word $*, $(LATITUDE))"; \
+	longitude="$(word $*, $(LONGITUDE))"; \
+	days_ago="$(DAYS_AGO)"; \
+	make aq-multi-features \
+		CSV="$$csv" URL="$$url" COUNTRY="$$country" CITY="$$city" STREET="$$street" LAT="$$latitude" LON="$$longitude" DAYS_AGO="$$days_ago"; \
+	make aq-multi-train \
+		CSV="$$csv" URL="$$url" COUNTRY="$$country" CITY="$$city" STREET="$$street" LAT="$$latitude" LON="$$longitude" DAYS_AGO="$$days_ago"; \
+	make aq-multi-inference \
+		CSV="$$csv" URL="$$url" COUNTRY="$$country" CITY="$$city" STREET="$$street" LAT="$$latitude" LON="$$longitude" DAYS_AGO="$$days_ago"
 
 aq-github: $(addprefix github-, $(shell seq 1 $(NUM_ITEMS)))
 
 github-%:
-	@idx=$*; \
-	csv=$(word $*, $(CSV_PATH)); \
-	url=$(word $*, $(AQICN_URLS)); \
-	country=$(word $*, $(AQICN_COUNTRY)); \
-	city=$(word $*, $(AQICN_CITY)); \
-	street=$(word $*, $(AQICN_STREET)); \
-	latitude=$(word $*, $(LATITUDE)); \
-	longitude=$(word $*, $(LONGITUDE)); \
-	ipython notebooks/airquality/2_air_quality_feature_pipeline.ipynb CSV="$$csv" URL="$$url" COUNTRY="$$country" CITY="$$city" STREET="$$street" LAT="$$latitude" LON="$$longitude"; \
-	ipython notebooks/airquality/4_air_quality_batch_inference.ipynb CSV="$$csv" URL="$$url" COUNTRY="$$country" CITY="$$city" STREET="$$street" LAT="$$latitude" LON="$$longitude"
+	@csv="$(word $*, $(CSV_PATH))"; \
+	url="$(word $*, $(AQICN_URLS))"; \
+	country="$(word $*, $(AQICN_COUNTRY))"; \
+	city="$(word $*, $(AQICN_CITY))"; \
+	street="$(word $*, $(AQICN_STREET))"; \
+	latitude="$(word $*, $(LATITUDE))"; \
+	longitude="$(word $*, $(LONGITUDE))"; \
+	days_ago="$(DAYS_AGO)"; \
+	make aq-multi-inference \
+		CSV="$$csv" URL="$$url" COUNTRY="$$country" CITY="$$city" STREET="$$street" LAT="$$latitude" LON="$$longitude" DAYS_AGO="$$days_ago"
 
 
 titanic-clean:
